@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        /* Global Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: "Poppins", sans-serif; 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: #fff; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.light-mode {
+            background: linear-gradient(135deg, #f8f8f2, #e6e6e6);
+            color: #282A36;
+        }
+        .container { 
+            width: 90%; 
+            max-width: 800px; 
+            padding: 30px; 
+            background: rgba(255, 255, 255, 0.1); 
+            border-radius: 20px; 
+            backdrop-filter: blur(10px); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); 
+            text-align: center; 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            transition: background 0.3s ease, border 0.3s ease, transform 0.3s ease;
+            transform: scale(1.0);
+        }
+        .blurred {
+            filter: blur(5px);
+        }
+        h1 { 
+            color: inherit; 
+            margin: 20px 0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 2.5rem; 
+            font-weight: 600; 
+            position: relative; 
+        }
+        h1 .logo { 
+            font-size: 2.5rem; 
+            margin-right: 15px; 
+            color: inherit; 
+            animation: spin 5s linear infinite; 
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Button styling */
+        button, .check-icon {
+            background: linear-gradient(135deg, #f0f0f0, #c0c0c0);
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 500;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover, .check-icon:hover {
+            background: linear-gradient(135deg, #c0c0c0, #f0f0f0);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        body.light-mode button, body.light-mode .check-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        /* Inputs */
+        input, select, textarea { 
+            background: rgba(255, 255, 255, 0.2); 
+            border: 1px solid rgba(255, 255, 255, 0.3); 
+            border-radius: 10px; 
+            padding: 12px; 
+            margin: 10px 0; 
+            width: calc(100% - 24px); 
+            color: inherit; 
+            font-size: 1rem; 
+            transition: all 0.3s ease; 
+        }
+        body.light-mode input, body.light-mode select, body.light-mode textarea {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #000;
+        }
+        input::placeholder, textarea::placeholder { 
+            color: rgba(255, 255, 255, 0.7); 
+        }
+        body.light-mode input::placeholder, body.light-mode textarea::placeholder {
+            color: rgba(0, 0, 0, 0.7);
+        }
+        input:focus, select:focus, textarea:focus { 
+            background: rgba(255, 255, 255, 0.3); 
+            outline: none; 
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); 
+        }
+        body.light-mode input:focus, body.light-mode select:focus, body.light-mode textarea:focus {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Task List */
+        .task-list { 
+            margin-top: 20px; 
+            max-height: 60vh; 
+            overflow-y: auto; 
+            padding-right: 10px; 
+            width: 100%;
+        }
+        .task-item { 
+            background: rgba(255, 255, 255, 0.1); 
+            padding: 15px; 
+            border-radius: 15px; 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            backdrop-filter: blur(5px); 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+        }
+        body.light-mode .task-item {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .task-item:hover { 
+            background: rgba(255, 255, 255, 0.2); 
+            transform: translateY(-5px); 
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
+        }
+        body.light-mode .task-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .task-title { 
+            color: inherit; 
+            flex-grow: 1; 
+            font-size: 1.1rem; 
+            margin-left: 15px; 
+            font-weight: 500; 
+        }
+        .task-title.completed { 
+            text-decoration: line-through; 
+            color: rgba(255, 255, 255, 0.5); 
+        }
+        body.light-mode .task-title.completed {
+            color: rgba(0, 0, 0, 0.5);
+        }
+        .delete-btn, .edit-btn, .update-btn { 
+            padding: 8px 15px; 
+            border-radius: 10px; 
+            border: none; 
+            color: white; 
+            margin-left: 10px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+        }
+        .delete-btn { background: #ff5555; }
+        .edit-btn { background: #50fa7b; }
+        .update-btn { background: #ffb86c; }
+        .delete-btn:hover, .edit-btn:hover, .update-btn:hover { 
+            transform: scale(1.1); 
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
+        }
+
+        /* Task Details */
+        .task-details { 
+            background: rgba(255, 255, 255, 0.1); 
+            color: inherit; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-top: 10px; 
+            display: none; 
+            text-align: left; 
+            backdrop-filter: blur(5px); 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+        }
+        body.light-mode .task-details {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .task-details i { 
+            margin-right: 10px; 
+            color: #50fa7b; 
+        }
+
+        /* Chart */
+        .task-chart { 
+            width: 80%; 
+            max-width: 400px; 
+            margin: 20px auto; 
+            display: none; 
+        }
+
+        /* Scrollbar Styles */
+        .task-list::-webkit-scrollbar {
+            width: 10px;
+        }
+        .task-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .task-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        .task-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        body.light-mode .task-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        body.light-mode .task-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.3);
+        }
+        body.light-mode .task-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) { 
+            .container { width: 95%; padding: 20px; } 
+            h1 { font-size: 2rem; } 
+            button, input, select, textarea { font-size: 0.9rem; } 
+        }
+
+        /* Quote Button */
+        #quoteBtn {
+            background: linear-gradient(135deg, #ff79c6, #bd93f9);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        #quoteBtn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Quote Card */
+        .quote-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            display: none; /* Initially hidden */
+            animation: fadeIn 0.5s ease-in-out;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            width: 80%;
+            max-width: 500px;
+        }
+        body.light-mode .quote-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .quote-card p {
+            font-size: 1.2rem;
+            font-style: italic;
+            color: inherit;
+            margin: 0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translate(-50%, -50%); }
+            to { opacity: 0; transform: translate(-50%, -60%); }
+        }
+
+        /* Additional Styling for the Whole Website */
+        .container {
+            animation: slideIn 0.5s ease-in-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Improved Spacing and Layout */
+        #taskForm {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #taskForm input, #taskForm select, #taskForm textarea {
+            margin: 5px 0;
+        }
+        #taskForm button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <div class="container">
+        <h1><i class="fas fa-clipboard-list logo"></i>To-Do List</h1>
+        <button id="modeToggle">Toggle Dark Mode</button>
+        <button id="quoteBtn">Get Motivation Quote</button>
+        <div id="taskForm">
+            <input type="text" id="taskInput" placeholder="Add a new task">
+            <input type="datetime-local" id="taskDeadline">
+            <select id="taskPriority">
+                <option value="low">Low Importance</option>
+                <option value="medium">Medium Importance</option>
+                <option value="high">High Importance</option>
+            </select>
+            <textarea id="taskNotes" placeholder="Notes"></textarea>
+            <button id="addTaskBtn" style="width: 100%;">Add Task</button>
+        </div>
+        <div id="taskList" class="task-list"></div>
+        <div class="task-chart">
+            <canvas id="taskChart"></canvas>
+        </div>
+    </div>
+    <div class="quote-card" id="quoteCard">
+        <p id="quoteDisplay"></p>
+    </div>
+
+    <script>
+        document.getElementById("modeToggle").addEventListener("click", function() {
+            const body = document.body;
+            body.classList.toggle("light-mode");
+            this.textContent = body.classList.contains("light-mode") ? "Toggle Dark Mode" : "Toggle Light Mode";
+        });
+
+        document.getElementById("addTaskBtn").addEventListener("click", addTask);
+        document.getElementById("quoteBtn").addEventListener("click", function() {
+            fetchQuote();
+            document.querySelector('.container').classList.add('blurred');
+            setTimeout(() => {
+                const quoteCard = document.getElementById("quoteCard");
+                quoteCard.style.animation = 'fadeOut 0.5s ease-in-out';
+                setTimeout(() => {
+                    quoteCard.style.display = "none";
+                    document.querySelector('.container').classList.remove('blurred');
+                }, 500); // Wait for the fade-out animation to complete
+            }, 10000); // Hide the quote card after 10 seconds
+        });
+
+        let tasks = [];
+        let myPieChart = null;
+
+        function addTask() {
+            let taskInput = document.getElementById("taskInput").value.trim();
+            let taskDeadline = document.getElementById("taskDeadline").value;
+            let taskPriority = document.getElementById("taskPriority").value;
+            let taskNotes = document.getElementById("taskNotes").value;
+
+            if (!taskInput) {
+                alert('Please enter a task title.');
+                return;
+            }
+
+            let newTask = { title: taskInput, deadline: taskDeadline, priority: taskPriority, notes: taskNotes, completed: false };
+            tasks.push(newTask);
+            renderTasks();
+            updateChart();
+            resetForm();
+        }
+
+        function renderTasks() {
+            let taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+            tasks.forEach((task, index) => {
+                let taskItem = document.createElement("div");
+                taskItem.className = "task-item";
+                taskItem.innerHTML = 
+                    '<div class="check-icon" onclick="toggleCompletion('+index+')"><i class="fas fa-check"></i></div>' +
+                    '<span class="task-title '+(task.completed ? 'completed' : '')+'" onclick="toggleDetails('+index+')">'+task.title+' (Due: '+formatDate(task.deadline)+')</span>' +
+                    '<button class="edit-btn" onclick="editTask('+index+')">Edit</button>' +
+                    '<button class="delete-btn" onclick="deleteTask('+index+')">Delete</button>' +
+                    '<div class="task-details" id="taskDetails'+index+'">' +
+                        '<p><i class="fas fa-calendar-alt"></i>Deadline: '+formatDate(task.deadline)+'</p>' +
+                        '<p><i class="fas fa-exclamation-circle"></i>Priority: '+task.priority+'</p>' +
+                        '<p><i class="fas fa-sticky-note"></i>Notes: '+task.notes+'</p>' +
+                    '</div>';
+                taskList.appendChild(taskItem);
+            });
+        }
+
+        function toggleCompletion(index) {
+            tasks[index].completed = !tasks[index].completed;
+            renderTasks();
+            updateChart();
+        }
+
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            renderTasks();
+            updateChart();
+        }
+
+        function editTask(index) {
+            let task = tasks[index];
+            document.getElementById("taskInput").value = task.title;
+            document.getElementById("taskDeadline").value = task.deadline;
+            document.getElementById("taskPriority").value = task.priority;
+            document.getElementById("taskNotes").value = task.notes;
+            tasks.splice(index, 1);
+            renderTasks();
+            updateChart();
+        }
+
+        function toggleDetails(index) {
+            let details = document.getElementById('taskDetails'+index);
+            if (details.style.display === "block") {
+                details.style.display = "none";
+            } else {
+                details.style.display = "block";
+            }
+        }
+
+        function updateChart() {
+            const ctx = document.getElementById("taskChart").getContext("2d");
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const pendingTasks = tasks.length - completedTasks;
+            
+            if (tasks.length === 0) {
+                document.querySelector('.task-chart').style.display = 'none';
+                return;
+            }
+
+            document.querySelector('.task-chart').style.display = 'block';
+
+            if (myPieChart) myPieChart.destroy();
+            myPieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ["Completed", "Pending"],
+                    datasets: [{
+                        data: [completedTasks, pendingTasks],
+                        backgroundColor: ['#50fa7b', '#ff5555'],
+                    }]
+                },
+                options: { responsive: true }
+            });
+        }
+
+        function resetForm() {
+            document.getElementById("taskInput").value = "";
+            document.getElementById("taskDeadline").value = "";
+            document.getElementById("taskPriority").value = "low";
+            document.getElementById("taskNotes").value = "";
+        }
+
+        function fetchQuote() {
+            fetch('http://localhost:5000/quote')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const quoteCard = document.getElementById("quoteCard");
+                    const quoteDisplay = document.getElementById("quoteDisplay");
+                    quoteDisplay.textContent = data.quote;
+                    quoteCard.style.display = "block"; // Show the quote card with pop-up effect
+                    quoteCard.style.animation = 'fadeIn 0.5s ease-in-out';
+                })
+                .catch(error => {
+                    const quoteCard = document.getElementById("quoteCard");
+                    const quoteDisplay = document.getElementById("quoteDisplay");
+                    quoteDisplay.textContent = "Failed to fetch quote. Please try again.";
+                    quoteCard.style.display = "block"; // Show the error message
+                    quoteCard.style.animation = 'fadeIn 0.5s ease-in-out';
+                    document.querySelector('.container').classList.remove('blurred');
+                });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'No deadline';
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+</body>
+</html>
+    
