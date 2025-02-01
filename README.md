@@ -38,6 +38,5 @@ The To-Do List Website is designed to enhance productivity by allowing users to 
 | Mushal Alshagha   |
 | Meshal Alsanari  |
 | Munirah Alzuman  |
-
 | Suliman alghanmi   |
 | Deema alhussain   | 
