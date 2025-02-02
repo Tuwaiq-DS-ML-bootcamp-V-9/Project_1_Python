@@ -16,8 +16,7 @@ def check_availability(data):
                     event_details['available'] = True
 
 
-def search_all_event(x):
-    return [(key, value) for key, value in {**Riyadh_dict, **Jeddah_dict}.items() if x.lower() in key.lower()]
+search_all_event = lambda x: [(key, value) for key, value in {**Riyadh_dict, **Jeddah_dict}.items() if x.lower() in key.lower()]
 
 
 def getOptions(cities):
