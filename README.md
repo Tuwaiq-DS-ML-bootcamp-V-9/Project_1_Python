@@ -4,7 +4,7 @@
 - Ahmed AlHarbi
 - Tahani AlOtaibi
 - Manar AlShaykh
-- Sultab AlQasami
+- Sultan AlQasami
 
 ## Project Overview
 The Grocery Shopping List Application is a user-friendly web app built with Streamlit that simplifies grocery management for users. This interactive application allows users to maintain a detailed grocery list, categorize items, and track their purchase status.
